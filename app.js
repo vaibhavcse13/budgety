@@ -38,8 +38,25 @@ var BudgetController = (function(){
     }
 
     return {
-        addItem :  function(){
-            
+        addItem :  function(type , description , value){
+            var newItem , ID ,  curLength;
+            // create new ID
+            curLength = data.allItems[type].length ; 
+            ID = curLength === 0 ?  1 :  data.allItems[curLength -1 ].id + 1 ;
+
+            //  created a new Item
+            if(type === 'income'){
+                newItem = new Income(ID, description , value);
+            }else if(type === 'expense'){
+                newItem = new Expense(ID , description , value);
+            }
+            //pushing into the container for later use
+            data.allItems[type].push(newItem);
+            //  return the new item 
+            return newItem;
+        },
+        testing : function(){
+            console.log(data);
         }
     }
 
@@ -90,12 +107,14 @@ var controller = (function(budgetCtrl , uiCtrl){
         setupEventListner(); //  calling the setupEventListner at first place 
     }
     var ctrlAddItem = function(){
-            var input = uiCtrl.getInput();
-            console.log(input);
+        var input  , newItem ;    
+
         // 1. get the filled input 
-
+          input = uiCtrl.getInput();
         // 2. add the item to the budget controller 
-
+         newItem = budgetCtrl.addItem(input.type ,  input.description , input.value);
+         console.log(newItem);
+         budgetCtrl.testing();
         //3. add the item to UI 
 
         //4. calculate the budget 
