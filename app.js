@@ -42,7 +42,7 @@ var BudgetController = (function(){
             var newItem , ID ,  curLength;
             // create new ID
             curLength = data.allItems[type].length ; 
-            ID = curLength === 0 ?  1 :  data.allItems[curLength -1 ].id + 1 ;
+            ID = curLength === 0 ?  1 :  data.allItems[type][curLength -1 ].id + 1 ;
 
             //  created a new Item
             if(type === 'income'){
@@ -69,7 +69,9 @@ var UIController = (function(){
         iaddType : '.add__type',
         iaddDescr : '.add__description', 
         iaddValue  : '.add__value' ,
-        aAddBtn  :'.add__btn'
+        aAddBtn  :'.add__btn' ,
+        incomeContainer : ".income__list" , 
+        expenseContainer : ".expenses__list"
     }
 
     function getIp(){
@@ -80,9 +82,45 @@ var UIController = (function(){
            }
      
     }
+
+    function addListItem(obj  , type){
+         var html , element ;
+     
+        // create HTML string with the vlaue
+        
+        if(type === 'income'){
+
+            element = DOMStrings.incomeContainer;
+            html = `<div class="item clearfix" id="income-${obj.id}">
+                    <div class="item__description">${obj.description}</div>
+                    <div class="right clearfix">
+                        <div class="item__value">+ ${obj.value}</div>
+                        <div class="item__delete">
+                            <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+        }else if(type === 'expense'){
+            element = DOMStrings.expenseContainer;
+            html =     `<div class="item clearfix" id="expense-${obj.id}">
+            <div class="item__description">${obj.description}</div>
+            <div class="right clearfix">
+                <div class="item__value">- ${obj.value}</div>
+                <div class="item__percentage">21%</div>
+                <div class="item__delete">
+                    <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>
+                </div>
+            </div>
+        </div>`;
+        }
+
+        // insert the new HTML element 
+        document.querySelector(element).insertAdjacentHTML("beforeend" , html);
+    }
     return {
         getInput :  getIp ,
-        DOMStrings : DOMStrings
+        DOMStrings : DOMStrings ,
+        addListItem : addListItem
     }
 }());
 
@@ -116,7 +154,7 @@ var controller = (function(budgetCtrl , uiCtrl){
          console.log(newItem);
          budgetCtrl.testing();
         //3. add the item to UI 
-
+        uiCtrl.addListItem(newItem , input.type);
         //4. calculate the budget 
 
         // 5. display the budget to the ui 
