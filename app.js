@@ -170,6 +170,12 @@ var UIController = (function(){
         document.querySelector(element).insertAdjacentHTML("beforeend" , html);
     }
 
+    function deleteListItem(elemId){
+        // removing the item is removing a child 
+        var element ; 
+        element = document.getElementById(elemId);
+        element.parentNode.removeChild(element);
+    }
     function clearFields(){
         var fields , fieldsArr ; 
                 // it returns the list not a array 
@@ -199,7 +205,8 @@ var UIController = (function(){
         DOMStrings : DOMStrings ,
         addListItem : addListItem ,
         clearFields : clearFields,
-        displayBudget : displayBudget
+        displayBudget : displayBudget ,
+        deleteListItem:deleteListItem
     }
 }());
 
@@ -270,8 +277,9 @@ var controller = (function(budgetCtrl , uiCtrl){
             budgetCtrl.deleteItem(splitId);
             budgetCtrl.testing();
             // 2 . delete item from the UI 
-
+            uiCtrl.deleteListItem(itemId);
             //3. update and show the budget .
+            updateBudget();
 
         }
     };
