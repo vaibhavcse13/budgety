@@ -12,7 +12,18 @@ var BudgetController = (function(){
         this.id =  id ;
         this.description = description ;
         this.value =  value ;
+        this.percentage =  -1;
 
+    }
+    Expense.prototype.calcPercentage =  function(totalIncome){
+        if(totalIncome > 0 ){
+            this.percentage = Math.round((this.value / totalIncome ) * 100); 
+        }else{
+            this.percentage = -1 ; 
+        }
+    }
+    Expense.prototype.getPercentage =  function() {
+        return this.percentage;
     }
     /**
      * function Constructor to create inceome 
@@ -72,26 +83,40 @@ var BudgetController = (function(){
         }
      
     }   
+    // calculate percentage
+    function calculatePercentages(){
+        
+        //  to calculate all precentage 
+        data.allItems.expense.forEach(function(current  , index,  array){
+            current.calcPercentage(data.totals.income);
+        })
+    }
 
+    function getPercentages(){
+        return data.allItems.expense.map(function(cur){
+            return cur.getPercentage();
+        })
+    }
 
+    function addItem(type , description , value){
+        var newItem , ID ,  curLength;
+        // create new ID
+        curLength = data.allItems[type].length ; 
+        ID = curLength === 0 ?  0 :  data.allItems[type][curLength -1 ].id + 1 ;
+
+        //  created a new Item
+        if(type === 'income'){
+            newItem = new Income(ID, description , value);
+        }else if(type === 'expense'){
+            newItem = new Expense(ID , description , value);
+        }
+        //pushing into the container for later use
+        data.allItems[type].push(newItem);
+        //  return the new item 
+        return newItem;
+    }
     return {
-        addItem :  function(type , description , value){
-            var newItem , ID ,  curLength;
-            // create new ID
-            curLength = data.allItems[type].length ; 
-            ID = curLength === 0 ?  0 :  data.allItems[type][curLength -1 ].id + 1 ;
-
-            //  created a new Item
-            if(type === 'income'){
-                newItem = new Income(ID, description , value);
-            }else if(type === 'expense'){
-                newItem = new Expense(ID , description , value);
-            }
-            //pushing into the container for later use
-            data.allItems[type].push(newItem);
-            //  return the new item 
-            return newItem;
-        },
+        addItem :  addItem,
         testing : function(){
             console.log(data);
         },
@@ -104,7 +129,9 @@ var BudgetController = (function(){
                 percentage : data.percentage
             }
         } ,
-        deleteItem : deleteItem
+        deleteItem : deleteItem ,
+        calculatePercentages :calculatePercentages ,
+        getPercentages : getPercentages
     }
 
 }());
@@ -123,7 +150,8 @@ var UIController = (function(){
         budgetExpense : ".budget__expenses--value" ,
         budget : ".budget__value" ,
         expPercentage : '.budget__expenses--percentage' ,
-        container : '.container'
+        container : '.container' ,
+        expPercentLabel : ".item__percentage"
 
                         
     }
@@ -200,13 +228,33 @@ var UIController = (function(){
             updateDOM(DOMStrings.expPercentage , "" ,  data.percentage , "%" )
         }
     }
+    function displayPercentages(percentanges){
+        var fields  , fieldsArr , nodeListForEach;
+        nodeListForEach = function(list , cb){
+            var i ; 
+            for(i=0 ; i < i < list.length ; i+=1){
+                cb(list[i], i );
+            }
+        };
+        
+        fields = document.querySelectorAll(DOMStrings.expPercentLabel);
+        nodeListForEach(fields , function(cur , index){
+            if(percentanges[index] >0 ){
+                cur.textContent = percentanges[index] + "%";
+            }else{
+                //cur.textContent = '----';
+            }
+            
+        })
+    }
     return {
         getInput :  getIp ,
         DOMStrings : DOMStrings ,
         addListItem : addListItem ,
         clearFields : clearFields,
         displayBudget : displayBudget ,
-        deleteListItem:deleteListItem
+        deleteListItem:deleteListItem ,
+        displayPercentages :displayPercentages
     }
 }());
 
@@ -219,11 +267,9 @@ var controller = (function(budgetCtrl , uiCtrl){
         //  keypress happen on document
         document.addEventListener('keypress' , function(evt){
             if(evt.keyCode === 13 || event.which === 13){
-                ctrlAddItem();
-                
+                ctrlAddItem(); 
             }
         });
-
         document.querySelector(DOMStrings.container).addEventListener('click' ,  ctrlDeleteItem);
     }
 
@@ -247,6 +293,19 @@ var controller = (function(budgetCtrl , uiCtrl){
         //3. display to UI 
         uiCtrl.displayBudget(budget);
     }
+
+    var updatePercentages =  function(){
+
+        // 1. calcualte percentages
+        budgetCtrl.calculatePercentages();
+
+        // 2. read preceantages from the budget controller 
+        var percentages =  budgetCtrl.getPercentages();
+        
+        //3. Update the UI with new percentages
+        uiCtrl.displayPercentages(percentages);
+
+    }
     var ctrlAddItem = function(){
         var input  , newItem ;    
 
@@ -261,8 +320,10 @@ var controller = (function(budgetCtrl , uiCtrl){
             uiCtrl.addListItem(newItem , input.type);
             // 4.  clear the field 
             uiCtrl.clearFields();
-            //4. Calculate the budget and display 
+            //5. Calculate the budget and display 
             updateBudget();        
+            // 6. update percentange 
+            updatePercentages();
         }
         
     }
@@ -280,6 +341,9 @@ var controller = (function(budgetCtrl , uiCtrl){
             uiCtrl.deleteListItem(itemId);
             //3. update and show the budget .
             updateBudget();
+            //  calcualte and update percentanges 
+            updatePercentages();
+
 
         }
     };
