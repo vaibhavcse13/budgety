@@ -58,12 +58,28 @@ var BudgetController = (function(){
 
     }
 
+    function deleteItem(itemToDelete){
+        var indexTODelete , indexToDel; 
+        console.log(data.allItems[itemToDelete[0]]);
+        indexToDel = data.allItems[itemToDelete[0]].findIndex(function(item){
+                return item.id  === parseInt(itemToDelete[1] , 10);
+        });
+        if(indexToDel !== -1 ){
+            data.allItems[itemToDelete[0]].splice(indexToDel , 1);
+        }else{
+            console.error("Unable to delete the item with id + " + itemToDelete[1]);
+
+        }
+     
+    }   
+
+
     return {
         addItem :  function(type , description , value){
             var newItem , ID ,  curLength;
             // create new ID
             curLength = data.allItems[type].length ; 
-            ID = curLength === 0 ?  1 :  data.allItems[type][curLength -1 ].id + 1 ;
+            ID = curLength === 0 ?  0 :  data.allItems[type][curLength -1 ].id + 1 ;
 
             //  created a new Item
             if(type === 'income'){
@@ -87,7 +103,8 @@ var BudgetController = (function(){
                 totalExpense : data.totals.expense,
                 percentage : data.percentage
             }
-        }
+        } ,
+        deleteItem : deleteItem
     }
 
 }());
@@ -105,7 +122,8 @@ var UIController = (function(){
         budgetIncome    :  ".budget__income--value" ,
         budgetExpense : ".budget__expenses--value" ,
         budget : ".budget__value" ,
-        expPercentage : '.budget__expenses--percentage'
+        expPercentage : '.budget__expenses--percentage' ,
+        container : '.container'
 
                         
     }
@@ -148,7 +166,6 @@ var UIController = (function(){
             </div>
         </div>`;
         }
-
         // insert the new HTML element 
         document.querySelector(element).insertAdjacentHTML("beforeend" , html);
     }
@@ -199,6 +216,8 @@ var controller = (function(budgetCtrl , uiCtrl){
                 
             }
         });
+
+        document.querySelector(DOMStrings.container).addEventListener('click' ,  ctrlDeleteItem);
     }
 
     var init = function() {
@@ -241,6 +260,22 @@ var controller = (function(budgetCtrl , uiCtrl){
         
     }
     
+    var ctrlDeleteItem = function(event ,  ){
+        var itemId ,splitId  ;
+        itemId = event.target.parentNode.parentNode.parentNode.parentNode.id;
+        if(itemId){
+             // income-0 , income-1
+            splitId =  itemId.split('-');
+            // 1. delete item form data structre 
+            budgetCtrl.deleteItem(splitId);
+            budgetCtrl.testing();
+            // 2 . delete item from the UI 
+
+            //3. update and show the budget .
+
+        }
+    };
+
     return {
         init : init
     }
